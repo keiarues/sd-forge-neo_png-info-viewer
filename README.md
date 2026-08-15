@@ -1,15 +1,16 @@
-# Stable Diffusion Forge テンプレート抽出 & PNG Info ビューアー
+# Stable Diffusion Forge テンプレート抽出 & 画像メタデータビューアー (PNG / JPG / WebP 対応)
 
-Stable Diffusion WebUI Forge 等で生成された **PNG画像**（またはグリッド画像・メタデータテキスト）から、**sd-dynamic-prompts**（ワイルドカード機能：`__構図__` など）置換前のプロンプトテンプレート（`Template` / `Negative Template`）および生成パラメータを自動抽出し、改行コードやエスケープ記号を復元・整形して見やすく出力するWebツール（SPA）です。
+Stable Diffusion WebUI Forge 等で生成された **PNG / JPG (JPEG) / WebP 画像**（またはグリッド画像・メタデータテキスト）から、**sd-dynamic-prompts**（ワイルドカード機能：`__構図__` など）置換前のプロンプトテンプレート（`Template` / `Negative Template`）および各種生成パラメータを自動抽出し、改行コードやエスケープ記号を復元・整形して見やすく出力するWebツール（SPA）です。
 
 ---
 
 ## ✨ 主な機能・特徴
 
-1. **🖼️ 画像ドラッグ＆ドロップ / ペースト対応 (NEW!)**
-   - PNG画像を画面上にドラッグ＆ドロップするだけで、画像内のメタデータ（`parameters`）を自動抽出して即座にプロンプトテンプレートを復元。
-   - 「画像を選択」ボタンでのファイル選択や、クリップボードからの画像ペースト（`Ctrl + V`）にも完全対応。
-   - 読み込んだ画像のサムネイルプレビュー・ファイルサイズ表示付き。
+1. **🖼️ 全画像フォーマット（PNG / JPG / WebP）のドラッグ＆ドロップ対応**
+   - PNG（`tEXt`/`iTXt` チャンク）、JPG（Exif `UserComment`/`ImageDescription`/`COM`）、WebP（`EXIF`/`XMP` チャンク）のバイナリ解析を完全サポート。
+   - 画面全体に画像をドラッグ＆ドロップするだけで即座にメタデータを読み込み。
+   - 「画像を選択」ボタンやクリップボードからの画像ペースト（`Ctrl + V`）にも対応。
+   - サムネイル画像プレビュー、ファイル名、ファイルサイズ表示付き。
 2. **⚡ リアルタイム自動解析 (Auto-parse)**
    - 画像ドロップ時やテキスト入力時に、即座に `Template` と `Negative Template` を抽出・整形して表示。
 3. **🔄 エスケープ文字の完全復元**
@@ -20,8 +21,8 @@ Stable Diffusion WebUI Forge 等で生成された **PNG画像**（またはグ�
    - Steps, Sampler, Schedule type, CFG scale, Seed, Size, Model, LoRA hashes などの追加情報も自動で検出し、折りたたみカード内にタグ形式で一覧表示。
 6. **🔒 完全クライアントサイド動作 (プライバシー保護)**
    - サーバー通信は一切行わず、画像やプロンプトデータが外部へ送信されることはありません。
-7. **📁 単一ファイル構成 (SPA)**
-   - `index.html` 1ファイルのみで動作するため、GitHub Pages やローカル環境で手軽に利用・共有できます。
+7. **📁 依存関係不要のシンプルなSPA構成**
+   - ビルド手順や外部サーバー不要。リポジトリをクローンまたはダウンロードして `index.html` を開くだけでローカルでも GitHub Pages でも手軽に利用可能です。
 
 ---
 
@@ -46,7 +47,7 @@ Stable Diffusion WebUI Forge 等で生成された **PNG画像**（またはグ�
 masterpiece, best quality, absurdres, highres,
 ...
 Negative prompt: worst quality, ...
-Steps: 15, Sampler: Res Multistep, CFG scale: 4, Seed: 3409572798, Size: 896x1152, Model: anima_baseV10, Template: "masterpiece, best quality,\n__構図/画面構図__: { 1 | 1.5 | 2 | 2.5 | 3} ,\n\n1girl,\n<lora:chikarin:1> ,\n__服装/おしゃれ着__ ,\n", Negative Template: "worst quality, low quality,\nbad anatomy,"
+Steps: 15, Sampler: Res Multistep, CFG scale: 4, Seed: 2337776575, Size: 896x1152, Model: anima_baseV10, Template: "masterpiece, best quality,\n__構図/画面構図__: { 1 | 1.5 | 2 | 2.5 | 3} ,\n\n1girl,\n<lora:chikarin:1> ,\n__服装/おしゃれ着__ ,\n", Negative Template: "worst quality, low quality,\nbad anatomy,"
 ```
 
 ### 抽出後のプロンプト (Template):
@@ -71,3 +72,21 @@ bad anatomy,
 - **HTML5 / CSS3 / JavaScript (ES2022 Vanilla JS)**
 - **Tailwind CSS (CDN)**
 - **Google Fonts (Inter / JetBrains Mono)**
+
+---
+
+## 📂 ファイル構成
+
+```text
+sd-forge-neo_png-info-viewer/
+├── index.html              # メイン画面マークアップ
+├── README.md               # ドキュメント
+├── css/
+│   └── style.css           # カスタムスクロールバー、アニメーション、ドラッグスタイル
+├── js/
+│   ├── constants.js        # サンプルメタデータ等の定数
+│   ├── parser.js           # 画像バイナリ解析（PNG/JPG/WebP）およびメタデータ抽出ロジック
+│   └── app.js              # DOM操作、UIイベントハンドラ、クリップボード連携
+└── sample_TestFile/        # テスト用画像・テキストファイル
+```
+
