@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="ja" class="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SD Forge グリッド画像 テンプレート抽出・整形ツール</title>
+  <meta name="description"
+    content="Stable Diffusion WebUI Forgeで生成したグリッド画像から、sd-dynamic-promptsのワイルドカード置換前テンプレート（Template / Negative Template）を自動抽出し、改行コードを復元・整形するWebツール">
+
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace']
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              200: '#c7d2fe',
+              400: '#818cf8',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    /* Custom scrollbars */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: rgba(30, 41, 59, 0.5);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(100, 116, 139, 0.5);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(148, 163, 184, 0.8);
+    }
+
+    /* Subtle pulse animation for toast */
+    @keyframes toast-in {
+      from {
+        transform: translateY(100%) scale(0.95);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+      }
+    }
+
+    .animate-toast-in {
+      animation: toast-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+  </style>
+</head>
+
+<body
+  class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans selection:bg-brand-500 selection:text-white antialiased">
+
+  <!-- Main Container -->
+  <div class="flex-1 flex flex-col max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- Header Section -->
+    <header class="mb-6 pb-6 border-b border-slate-800">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-3">
+            <div
+              class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 text-white font-bold text-xl">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+              </svg>
+            </div>
+            <div>
+              <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+                SD Forge テンプレート抽出・整形ツール
+                <span
+                  class="text-xs px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-medium">v1.0</span>
+              </h1>
+              <p class="text-xs sm:text-sm text-slate-400 mt-0.5">
+                グリッド画像からワイルドカード（sd-dynamic-prompts）置換前のプロンプトテンプレートを自動復元
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Controls -->
+        <div class="flex items-center gap-2 flex-wrap">
+          <button id="btn-sample" type="button"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-200 bg-slate-800 hover:bg-slate-700 hover:text-white border border-slate-700 rounded-lg transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            サンプル読込
+          </button>
+          <button id="btn-paste" type="button"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-200 bg-slate-800 hover:bg-slate-700 hover:text-white border border-slate-700 rounded-lg transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            貼付
+          </button>
+          <button id="btn-clear" type="button"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-400 hover:text-rose-400 hover:bg-rose-950/30 border border-slate-800 hover:border-rose-900/50 rounded-lg transition-colors shadow-sm focus:outline-none">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            クリア
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Status Bar / Notifications -->
+    <div id="status-bar" class="mb-5 hidden">
+      <div id="status-box"
+        class="flex items-center justify-between px-4 py-2.5 rounded-xl text-sm border transition-all">
+        <div class="flex items-center gap-2.5">
+          <span id="status-icon" class="flex-shrink-0"></span>
+          <span id="status-text" class="font-medium"></span>
+        </div>
+        <div id="status-meta-tags" class="flex items-center gap-2 flex-wrap text-xs"></div>
+      </div>
+    </div>
+
+    <!-- Main Workspace (Grid 2-Column on Desktop) -->
+    <main class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 items-stretch">
+
+      <!-- Left Column: Input (Raw Parameters) -->
+      <section
+        class="lg:col-span-5 flex flex-col bg-slate-900/80 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl backdrop-blur">
+        <div class="flex items-center justify-between mb-3">
+          <label for="raw-input" class="text-sm font-semibold text-slate-200 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
+            整形前のメタデータ (Raw Parameters)
+          </label>
+          <span class="text-xs text-slate-400 font-mono" id="input-stats">0 文字</span>
+        </div>
+
+        <div class="relative flex-1 flex flex-col min-h-[280px]">
+          <textarea id="raw-input" rows="16"
+            class="w-full flex-1 p-3.5 bg-slate-950/70 border border-slate-800 focus:border-indigo-500/80 rounded-xl font-mono text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 resize-none transition-all leading-relaxed"
+            placeholder="Stable Diffusion Forge のグリッド画像からコピーした生のパラメータ（Steps: ..., Template: &quot;...&quot; など）をここに貼り付けてください...&#10;&#10;※ テキストを入力すると自動でリアルタイムに解析・整形されます。"
+            spellcheck="false"></textarea>
+        </div>
+
+        <!-- Input Bottom Toolbar -->
+        <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between">
+          <div class="flex items-center gap-2 text-xs text-slate-400">
+            <span class="inline-flex items-center gap-1 text-emerald-400">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              リアルタイム自動解析 有効
+            </span>
+          </div>
+          <button id="btn-manual-parse" type="button"
+            class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 rounded-lg shadow-sm shadow-indigo-600/30 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500/50">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            手動で変換
+          </button>
+        </div>
+      </section>
+
+      <!-- Right Column: Outputs (Template & Negative Template) -->
+      <section class="lg:col-span-7 flex flex-col gap-6">
+
+        <!-- Prompt Template Card -->
+        <div
+          class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl backdrop-blur flex flex-col">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-indigo-400 inline-block"></span>
+              <h2 class="text-sm font-semibold text-slate-100">抽出・整形後のプロンプト (Template)</h2>
+              <span id="prompt-badge"
+                class="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 font-mono">未検出</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="text-xs text-slate-400 font-mono hidden sm:inline" id="prompt-stats">0 行 / 0 文字</span>
+              <button id="btn-copy-prompt" type="button"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-indigo-200 bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 hover:border-indigo-500/50 rounded-lg transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                disabled>
+                <svg class="w-3.5 h-3.5 copy-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                <span class="copy-text">コピー</span>
+              </button>
+            </div>
+          </div>
+          <div class="relative">
+            <textarea id="output-prompt" readonly rows="9"
+              class="w-full p-3.5 bg-slate-950/90 border border-slate-800 rounded-xl font-mono text-xs text-slate-100 placeholder-slate-600 focus:outline-none resize-none leading-relaxed select-all"
+              placeholder="メタデータを入力すると、ここに整形されたプロンプトテンプレートが表示されます..."></textarea>
+          </div>
+        </div>
+
+        <!-- Negative Prompt Template Card -->
+        <div
+          class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl backdrop-blur flex flex-col">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-rose-400 inline-block"></span>
+              <h2 class="text-sm font-semibold text-slate-100">抽出・整形後のネガティブプロンプト (Negative Template)</h2>
+              <span id="negative-badge"
+                class="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 font-mono">未検出</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="text-xs text-slate-400 font-mono hidden sm:inline" id="negative-stats">0 行 / 0 文字</span>
+              <button id="btn-copy-negative" type="button"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-rose-200 bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/30 hover:border-rose-500/50 rounded-lg transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-500/40 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                disabled>
+                <svg class="w-3.5 h-3.5 copy-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                <span class="copy-text">コピー</span>
+              </button>
+            </div>
+          </div>
+          <div class="relative">
+            <textarea id="output-negative" readonly rows="6"
+              class="w-full p-3.5 bg-slate-950/90 border border-slate-800 rounded-xl font-mono text-xs text-slate-100 placeholder-slate-600 focus:outline-none resize-none leading-relaxed select-all"
+              placeholder="メタデータを入力すると、ここに整形されたネガティブプロンプトテンプレートが表示されます..."></textarea>
+          </div>
+        </div>
+
+        <!-- Extra Parameters / LoRA Info Accordion -->
+        <div id="extra-params-container"
+          class="bg-slate-900/60 border border-slate-800/80 rounded-xl overflow-hidden transition-all hidden">
+          <button id="btn-toggle-extra" type="button"
+            class="w-full px-4 py-3 text-left flex items-center justify-between text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800/50 transition-colors">
+            <span class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              その他の生成パラメータ詳細 (<span id="extra-params-count">0</span> 件検出)
+            </span>
+            <svg id="arrow-extra" class="w-4 h-4 text-slate-400 transform transition-transform duration-200" fill="none"
+              viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          <div id="extra-params-content" class="px-4 pb-3 pt-1 border-t border-slate-800/60 hidden">
+            <div id="extra-params-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 text-xs"></div>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer
+      class="mt-8 pt-4 border-t border-slate-800 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2">
+      <div>
+        Stable Diffusion WebUI Forge & sd-dynamic-prompts Template Extractor
+      </div>
+      <div>
+        100% クライアントサイド処理（外部へのデータ送信なし）
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- JavaScript Logic -->
+  <script>
+    // Sample Test Data from User Specification
+    const SAMPLE_METADATA = `Steps: 32, Sampler: ER SDE, Schedule type: Beta, CFG scale: 4, Shift: 3, Seed: 443388188, Size: 1024x1024, Model: anima_baseV10_SafeTensor_full_bf16_2945208, Model hash: bd43b7cffe, Module 1: qwen_image_vae_Other_bf16_2945208, Module 2: anima_baseV10_txt_Other_bf16_2945208, RNG: CPU, Template: "masterpiece, best quality, absurdres, highres,\\nyear 2024, year 2025, newest,\\nscore_7,score_6,\\nofficial art, anime coloring,\\n\\n\\n__構図/画面構図__ ,\\n__構図/360度アングル__ ,\\n\\n\\n1girl,\\n<lora:20260714_blue6_mutio_anima_v100_unet:1>,\\nblue6_mutio, \\ngrey hair, white hair ,\\nred eyes ,\\npointy ears,\\nforehead mark, facial mark ,\\n\\nfish girl , monster girl ,\\ncolored skin, multicolored skin ,\\nwhite skin , yellow skin ,\\nanimal humanoid ,\\npink wings ,\\narm fins , fins ,\\n\\n__ポーズ/Female_Charming_Poses__ ,\\n\\n", Negative Template: "muscular girl, overweight girl, curvy, plump girl, fat girl, obese girl,\\nworst quality, low quality,\\nscore_1, score_2, score_3, score_4,\\nbad anatomy, bad hands, mutated hands, fused fingers, extra fingers,\\nblurry, jpeg artifacts, sepia,\\nwatermark, signature, logo,", Lora hashes: "20260714_blue6_mutio_anima_v100_unet: 0137678f726a", Discard penultimate sigma: True, Beta schedule alpha: 0.6, Beta schedule beta: 0.6, Version: neo-2.26`;
+
+    // DOM Elements
+    const rawInput = document.getElementById('raw-input');
+    const outputPrompt = document.getElementById('output-prompt');
+    const outputNegative = document.getElementById('output-negative');
+    const promptBadge = document.getElementById('prompt-badge');
+    const negativeBadge = document.getElementById('negative-badge');
+    const btnCopyPrompt = document.getElementById('btn-copy-prompt');
+    const btnCopyNegative = document.getElementById('btn-copy-negative');
+    const btnManualParse = document.getElementById('btn-manual-parse');
+    const btnSample = document.getElementById('btn-sample');
+    const btnPaste = document.getElementById('btn-paste');
+    const btnClear = document.getElementById('btn-clear');
+    const inputStats = document.getElementById('input-stats');
+    const promptStats = document.getElementById('prompt-stats');
+    const negativeStats = document.getElementById('negative-stats');
+    const statusBar = document.getElementById('status-bar');
+    const statusBox = document.getElementById('status-box');
+    const statusIcon = document.getElementById('status-icon');
+    const statusText = document.getElementById('status-text');
+    const statusMetaTags = document.getElementById('status-meta-tags');
+    const extraParamsContainer = document.getElementById('extra-params-container');
+    const btnToggleExtra = document.getElementById('btn-toggle-extra');
+    const extraParamsContent = document.getElementById('extra-params-content');
+    const extraParamsCount = document.getElementById('extra-params-count');
+    const extraParamsGrid = document.getElementById('extra-params-grid');
+    const arrowExtra = document.getElementById('arrow-extra');
+
+    // Unescape escaped strings (newline, quotes, tabs, backslashes)
+    function unescapeTemplateString(str) {
+      if (!str) return '';
+      return str
+        .replace(/\\r\\n/g, '\n')
+        .replace(/\\n/g, '\n')
+        .replace(/\\r/g, '\n')
+        .replace(/\\t/g, '\t')
+        .replace(/\\"/g, '"')
+        .replace(/\\\\/g, '\\');
+    }
+
+    // Core Parser Function
+    function parseMetadata(text) {
+      if (!text || !text.trim()) {
+        return {
+          isEmpty: true,
+          template: null,
+          negativeTemplate: null,
+          hasTemplate: false,
+          hasNegativeTemplate: false,
+          extraParams: {}
+        };
+      }
+
+      // Regex matches for quoted Template & Negative Template
+      // Uses negative lookbehind to prevent "Negative Template:" matching "Template:"
+      const templateQuotedRegex = /(?<!Negative\s+)Template:\s*"((?:[^"\\]|\\.)*)"/s;
+      const negTemplateQuotedRegex = /Negative Template:\s*"((?:[^"\\]|\\.)*)"/s;
+
+      let templateMatch = text.match(templateQuotedRegex);
+      let negTemplateMatch = text.match(negTemplateQuotedRegex);
+
+      let template = templateMatch ? unescapeTemplateString(templateMatch[1]) : null;
+      let negativeTemplate = negTemplateMatch ? unescapeTemplateString(negTemplateMatch[1]) : null;
+
+      // Fallback for unquoted cases
+      if (template === null) {
+        const templateUnquoted = /(?<!Negative\s+)Template:\s*([^,\n]+?)(?=,\s*[A-Za-z0-9\s_-]+:|$)/s;
+        const unquotedMatch = text.match(templateUnquoted);
+        if (unquotedMatch) {
+          template = unescapeTemplateString(unquotedMatch[1].trim());
+        }
+      }
+
+      if (negativeTemplate === null) {
+        const negTemplateUnquoted = /Negative Template:\s*([^,\n]+?)(?=,\s*[A-Za-z0-9\s_-]+:|$)/s;
+        const unquotedMatch = text.match(negTemplateUnquoted);
+        if (unquotedMatch) {
+          negativeTemplate = unescapeTemplateString(unquotedMatch[1].trim());
+        }
+      }
+
+      // Extract common SD Forge generation parameters for extra context
+      const extraParams = {};
+      const knownKeys = [
+        'Steps', 'Sampler', 'Schedule type', 'CFG scale', 'Distilled CFG Scale',
+        'Shift', 'Seed', 'Size', 'Model', 'Model hash', 'Lora hashes',
+        'Module 1', 'Module 2', 'RNG', 'Version'
+      ];
+
+      for (const key of knownKeys) {
+        const regex = new RegExp(`(?:^|[,\\n])\\s*${key}:\\s*("((?:[^"\\\\]|\\\\.)*)"|[^,\\n]+)`, 'i');
+        const match = text.match(regex);
+        if (match) {
+          let val = match[1].trim();
+          if (val.startsWith('"') && val.endsWith('"')) {
+            val = unescapeTemplateString(val.slice(1, -1));
+          }
+          extraParams[key] = val;
+        }
+      }
+
+      return {
+        isEmpty: false,
+        template,
+        negativeTemplate,
+        hasTemplate: template !== null,
+        hasNegativeTemplate: negativeTemplate !== null,
+        extraParams
+      };
+    }
+
+    // Helper: compute stats (lines and chars)
+    function getStats(text) {
+      if (!text) return { lines: 0, chars: 0 };
+      const lines = text.split(/\r\n|\r|\n/).length;
+      const chars = text.length;
+      return { lines, chars };
+    }
+
+    // Update UI based on parser result
+    function processInput() {
+      const text = rawInput.value;
+      inputStats.textContent = `${text.length} 文字`;
+
+      const result = parseMetadata(text);
+
+      if (result.isEmpty) {
+        // Reset everything
+        outputPrompt.value = '';
+        outputNegative.value = '';
+        btnCopyPrompt.disabled = true;
+        btnCopyNegative.disabled = true;
+
+        promptBadge.textContent = '未入力';
+        promptBadge.className = 'text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 font-mono';
+        promptStats.textContent = '0 行 / 0 文字';
+
+        negativeBadge.textContent = '未入力';
+        negativeBadge.className = 'text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 font-mono';
+        negativeStats.textContent = '0 行 / 0 文字';
+
+        statusBar.classList.add('hidden');
+        extraParamsContainer.classList.add('hidden');
+        return;
+      }
+
+      // Handle Prompt Template
+      if (result.hasTemplate) {
+        outputPrompt.value = result.template;
+        btnCopyPrompt.disabled = false;
+        promptBadge.textContent = '抽出完了';
+        promptBadge.className = 'text-xs px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-medium';
+        const st = getStats(result.template);
+        promptStats.textContent = `${st.lines} 行 / ${st.chars} 文字`;
+      } else {
+        outputPrompt.value = '（メタデータ内に「Template:」項目が見つかりませんでした）';
+        btnCopyPrompt.disabled = true;
+        promptBadge.textContent = '該当なし';
+        promptBadge.className = 'text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 font-mono';
+        promptStats.textContent = '0 行 / 0 文字';
+      }
+
+      // Handle Negative Template
+      if (result.hasNegativeTemplate) {
+        outputNegative.value = result.negativeTemplate;
+        btnCopyNegative.disabled = false;
+        negativeBadge.textContent = '抽出完了';
+        negativeBadge.className = 'text-xs px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 font-medium';
+        const st = getStats(result.negativeTemplate);
+        negativeStats.textContent = `${st.lines} 行 / ${st.chars} 文字`;
+      } else {
+        outputNegative.value = '（メタデータ内に「Negative Template:」項目が見つかりませんでした）';
+        btnCopyNegative.disabled = true;
+        negativeBadge.textContent = '該当なし';
+        negativeBadge.className = 'text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 font-mono';
+        negativeStats.textContent = '0 行 / 0 文字';
+      }
+
+      // Update Status Bar
+      statusBar.classList.remove('hidden');
+      statusMetaTags.innerHTML = '';
+
+      if (result.hasTemplate && result.hasNegativeTemplate) {
+        statusBox.className = 'flex items-center justify-between px-4 py-2.5 rounded-xl text-sm border bg-emerald-950/30 border-emerald-800/50 text-emerald-300';
+        statusIcon.innerHTML = `
+          <svg class="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>`;
+        statusText.textContent = 'Template および Negative Template の両方を正常に抽出・整形しました';
+      } else if (result.hasTemplate || result.hasNegativeTemplate) {
+        statusBox.className = 'flex items-center justify-between px-4 py-2.5 rounded-xl text-sm border bg-blue-950/30 border-blue-800/50 text-blue-300';
+        statusIcon.innerHTML = `
+          <svg class="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>`;
+        statusText.textContent = result.hasTemplate ? 'Template（プロンプト）のみ抽出しました' : 'Negative Template（ネガティブ）のみ抽出しました';
+      } else {
+        statusBox.className = 'flex items-center justify-between px-4 py-2.5 rounded-xl text-sm border bg-amber-950/30 border-amber-800/50 text-amber-300';
+        statusIcon.innerHTML = `
+          <svg class="w-5 h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>`;
+        statusText.textContent = 'Template / Negative Template 項目が見つかりませんでした（通常のメタデータまたは別形式の可能性があります）';
+      }
+
+      // Handle Extra Parameters
+      const paramKeys = Object.keys(result.extraParams);
+      if (paramKeys.length > 0) {
+        extraParamsContainer.classList.remove('hidden');
+        extraParamsCount.textContent = paramKeys.length;
+        extraParamsGrid.innerHTML = '';
+
+        for (const [k, v] of Object.entries(result.extraParams)) {
+          const item = document.createElement('div');
+          item.className = 'bg-slate-950/60 p-2 rounded-lg border border-slate-800/60 flex flex-col gap-0.5 overflow-hidden';
+          item.innerHTML = `
+            <span class="text-[10px] uppercase font-semibold text-slate-400 tracking-wider">${escapeHtml(k)}</span>
+            <span class="text-slate-200 font-mono truncate text-[11px]" title="${escapeHtml(v)}">${escapeHtml(v)}</span>
+          `;
+          extraParamsGrid.appendChild(item);
+        }
+      } else {
+        extraParamsContainer.classList.add('hidden');
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // Copy to clipboard helper with rich visual feedback
+    async function copyToClipboard(text, buttonEl, label = 'コピー') {
+      if (!text || buttonEl.disabled) return;
+
+      try {
+        await navigator.clipboard.writeText(text);
+
+        // Feedback in button
+        const copyTextEl = buttonEl.querySelector('.copy-text');
+        const originalText = copyTextEl ? copyTextEl.textContent : label;
+        if (copyTextEl) copyTextEl.textContent = 'コピー完了！';
+        buttonEl.classList.add('ring-2', 'ring-emerald-400', 'bg-emerald-600/30', 'text-emerald-200', 'border-emerald-500/50');
+
+        showToast('クリップボードにコピーしました', 'success');
+
+        setTimeout(() => {
+          if (copyTextEl) copyTextEl.textContent = originalText;
+          buttonEl.classList.remove('ring-2', 'ring-emerald-400', 'bg-emerald-600/30', 'text-emerald-200', 'border-emerald-500/50');
+        }, 1800);
+      } catch (err) {
+        console.error('Clipboard copy failed: ', err);
+        // Fallback using textarea selection
+        const fallbackTextarea = document.createElement('textarea');
+        fallbackTextarea.value = text;
+        document.body.appendChild(fallbackTextarea);
+        fallbackTextarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(fallbackTextarea);
+        showToast('クリップボードにコピーしました', 'success');
+      }
+    }
+
+    // Toast Notification System
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+
+      const isSuccess = type === 'success';
+      const borderCol = isSuccess ? 'border-emerald-500/40' : 'border-indigo-500/40';
+      const bgCol = isSuccess ? 'bg-emerald-950/90 text-emerald-200' : 'bg-slate-900/90 text-slate-100';
+
+      toast.className = `flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-medium border ${borderCol} ${bgCol} shadow-2xl backdrop-blur animate-toast-in pointer-events-auto transition-all duration-300`;
+      toast.innerHTML = `
+        <svg class="w-4 h-4 ${isSuccess ? 'text-emerald-400' : 'text-indigo-400'} flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+        <span>${escapeHtml(message)}</span>
+      `;
+
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(10px)';
+        setTimeout(() => toast.remove(), 300);
+      }, 2500);
+    }
+
+    // Event Listeners
+    // Realtime input listener (Auto-parse)
+    rawInput.addEventListener('input', () => {
+      processInput();
+    });
+
+    // Manual parse button
+    btnManualParse.addEventListener('click', () => {
+      processInput();
+      showToast('解析・整形を更新しました', 'info');
+    });
+
+    // Copy Prompt Button
+    btnCopyPrompt.addEventListener('click', () => {
+      copyToClipboard(outputPrompt.value, btnCopyPrompt, 'コピー');
+    });
+
+    // Copy Negative Prompt Button
+    btnCopyNegative.addEventListener('click', () => {
+      copyToClipboard(outputNegative.value, btnCopyNegative, 'コピー');
+    });
+
+    // Load Sample Button
+    btnSample.addEventListener('click', () => {
+      rawInput.value = SAMPLE_METADATA;
+      processInput();
+      showToast('テスト用サンプルデータを読み込みました', 'info');
+    });
+
+    // Paste from Clipboard Button
+    btnPaste.addEventListener('click', async () => {
+      try {
+        const clipText = await navigator.clipboard.readText();
+        if (clipText) {
+          rawInput.value = clipText;
+          processInput();
+          showToast('クリップボードから貼り付けました', 'info');
+        } else {
+          showToast('クリップボードが空です', 'info');
+        }
+      } catch (err) {
+        showToast('クリップボードの読み取り権限がありません。直接貼り付けてください。', 'info');
+        rawInput.focus();
+      }
+    });
+
+    // Clear Button
+    btnClear.addEventListener('click', () => {
+      rawInput.value = '';
+      processInput();
+      showToast('入力をクリアしました', 'info');
+      rawInput.focus();
+    });
+
+    // Toggle Extra Parameters Accordion
+    btnToggleExtra.addEventListener('click', () => {
+      const isHidden = extraParamsContent.classList.contains('hidden');
+      if (isHidden) {
+        extraParamsContent.classList.remove('hidden');
+        arrowExtra.classList.add('rotate-180');
+      } else {
+        extraParamsContent.classList.add('hidden');
+        arrowExtra.classList.remove('rotate-180');
+      }
+    });
+
+    // Auto-focus input on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      rawInput.focus();
+    });
+  </script>
+</body>
+
+</html>
