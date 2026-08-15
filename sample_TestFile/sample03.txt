@@ -1,0 +1,25 @@
+masterpiece, best quality, absurdres, highres,
+year 2024, year 2025, newest,
+score_8 , score_7, score_6,
+official art, anime coloring,
+<lora:anima-turbo-lora-v0.2_2979642:0.6> ,
+
+Dynamic angle,
+([三角構図:999], Triangle Composition: 2 ) ,
+(from front,from behind: 1 ) ,
+
+1girl,
+<lora:20260814_chikarin_koikatsu_anima_v100-000025:1> ,
+chikarin_koikatsu ,
+
+skirt, jewelry, yellow skirt, earrings, long skirt, sweater, bag, handbag, sitting, long sleeves, nail polish, parted lips, head rest, ring ,
+
+
+Negative prompt: (looking at viewer:3) ,
+(muscular girl, overweight girl, curvy, plump girl, fat girl, obese girl:2),
+worst quality, low quality,
+score_1, score_2, score_3, score_4,
+bad anatomy, bad hands, mutated hands, fused fingers, extra fingers,
+blurry, jpeg artifacts, sepia,
+watermark, signature, logo,
+Steps: 15, Sampler: Res Multistep, Schedule type: SGM Uniform, CFG scale: 4, Shift: 3, Seed: 1541915834, Size: 896x1152, Model: anima_baseV10_SafeTensor_full_bf16_2945208, Model hash: bd43b7cffe, Module 1: qwen_image_vae_Other_bf16_2945208, Module 2: anima_baseV10_txt_Other_bf16_2945208, RNG: CPU, Template: "masterpiece, best quality, absurdres, highres,\nyear 2024, year 2025, newest,\nscore_8 , score_7, score_6,\nofficial art, anime coloring,\n <lora:anima-turbo-lora-v0.2_2979642:0.6> ,\n\nDynamic angle, \n(__構図/画面構図__: { 1 | 1.5 | 2 | 2.5 | 3} ) , \n(__構図/360度アングル__: { 1 | 1.5 | 2 | 2.5 | 3} ) ,\n\n1girl,\n<lora:20260814_chikarin_koikatsu_anima_v100-000025:1> , \nchikarin_koikatsu , \n\n__服装/おしゃれ着__ , \n\n", Negative Template: "(looking at viewer:3) ,\n(muscular girl, overweight girl, curvy, plump girl, fat girl, obese girl:2),\nworst quality, low quality,\nscore_1, score_2, score_3, score_4,\nbad anatomy, bad hands, mutated hands, fused fingers, extra fingers,\nblurry, jpeg artifacts, sepia,\nwatermark, signature, logo,", Lora hashes: "anima-turbo-lora-v0.2_2979642: 1b55e40bdb1d, 20260814_chikarin_koikatsu_anima_v100-000025: c39b648f8885", Emphasis: Original, Discard penultimate sigma: True, Version: neo-2.28
