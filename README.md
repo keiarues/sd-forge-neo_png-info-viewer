@@ -1,48 +1,38 @@
-# Stable Diffusion Forge テンプレート抽出 & 画像メタデータビューアー (PNG / JPG / WebP 対応)
+# SD Forge イメージ メタデータビューアー 抽出整形ツール
 
-Stable Diffusion WebUI Forge 等で生成された **PNG / JPG (JPEG) / WebP 画像**（またはグリッド画像・メタデータテキスト）から、**sd-dynamic-prompts**（ワイルドカード機能：`__構図__` など）置換前のプロンプトテンプレート（`Template` / `Negative Template`）および各種生成パラメータを自動抽出し、改行コードやエスケープ記号を復元・整形して見やすく出力するWebツール（SPA）です。
+Stable Diffusion Forge Neo で生成した画像から、埋め込まれたメタデータを読み込み、プロンプトや生成パラメータを確認するためのツールです。
 
----
+Forge Neo の画像メタデータには、ワイルドカードが置換されたプロンプトに加えて、置換前のテンプレートが保存されている場合があります。本ツールは後半に記録された `Template` と `Negative Template` を抽出し、エスケープされた改行などを復元して表示します。
 
-## ✨ 主な機能・特徴
+## 公開ページ
 
-1. **🖼️ 全画像フォーマット（PNG / JPG / WebP）のドラッグ＆ドロップ対応**
-   - PNG（`tEXt`/`iTXt` チャンク）、JPG（Exif `UserComment`/`ImageDescription`/`COM`）、WebP（`EXIF`/`XMP` チャンク）のバイナリ解析を完全サポート。
-   - 画面全体に画像をドラッグ＆ドロップするだけで即座にメタデータを読み込み。
-   - 「画像を選択」ボタンやクリップボードからの画像ペースト（`Ctrl + V`）にも対応。
-   - サムネイル画像プレビュー、ファイル名、ファイルサイズ表示付き。
-2. **⚡ リアルタイム自動解析 (Auto-parse)**
-   - 画像ドロップ時やテキスト入力時に、即座に `Template` と `Negative Template` を抽出・整形して表示。
-3. **🔄 エスケープ文字の完全復元**
-   - 1行に圧縮された `\n` や `\r\n` を実際の改行に変換し、ダブルクォーテーションのエスケープ（`\"`）やバックスラッシュ（`\\`）を復元。
-4. **📋 ワンクリック・コピー機能**
-   - プロンプト、ネガティブプロンプトそれぞれに独立したコピーボタンを配置。コピー完了時には視覚的なフィードバックとトースト通知が表示されます。
-5. **📊 生成パラメータの検出表示**
-   - Steps, Sampler, Schedule type, CFG scale, Seed, Size, Model, LoRA hashes などの追加情報も自動で検出し、折りたたみカード内にタグ形式で一覧表示。
-6. **🔒 完全クライアントサイド動作 (プライバシー保護)**
-   - サーバー通信は一切行わず、画像やプロンプトデータが外部へ送信されることはありません。
-7. **📁 依存関係不要のシンプルなSPA構成**
-   - ビルド手順や外部サーバー不要。リポジトリをクローンまたはダウンロードして `index.html` を開くだけでローカルでも GitHub Pages でも手軽に利用可能です。
+以下のページから利用できます。
 
----
+<https://keiarues.github.io/sd-forge-neo_png-info-viewer/>
 
-## 🚀 使い方
+## 主な機能
 
-### 1. ローカルで直接開く場合
-- `index.html` ファイルをお使いのブラウザ（Google Chrome, Edge, Safari, Firefox など）にドラッグ＆ドロップまたはダブルクリックして開くだけで利用可能です。
+- `Template` と `Negative Template` の抽出・整形
+- `Steps`、`Sampler`、`CFG scale`、`Seed`、`Model` などの生成パラメータ表示
+- PNG、JPEG、WebP に対応
+- 画像のドラッグ＆ドロップ、ファイル選択、クリップボードからの貼り付けに対応
+- `TestFile_sample` のサンプル画像を読み込む「サンプル画像読込」ボタンを搭載
+- 改行コードや `\n`、`\r\n`、`\t` などのエスケープ文字を復元
+- すべてブラウザ内で処理するため、画像やメタデータを外部へ送信しない
 
-### 2. GitHub Pages で公開する場合
-1. 本リポジトリをGitHubにプッシュします。
-2. リポジトリの **Settings** > **Pages** に移動します。
-3. **Build and deployment** の Source で **Deploy from a branch** を選択します。
-4. Branch に `main` (または `master`) / `/ (root)` を指定して **Save** をクリックします。
-5. 数分後、発行されたURL（例: `https://keiarues.github.io/sd-forge-neo_png-info-viewer/`）にアクセスするとWeb上でツールが利用可能になります。
+## 使い方
 
----
+1. 公開ページを開きます。
+2. 画像を drop-zone にドラッグ＆ドロップするか、「画像を選択」から読み込みます。
+3. クリップボードにコピーした画像は、「貼付」ボタンから読み込めます。
+4. 機能を試す場合は、drop-zone 下の「サンプル画像読込」ボタンを押します。
+5. 読み込んだメタデータが Raw Parameters に表示され、抽出結果が下のテキストボックスに表示されます。
 
-## 📋 動作例
+テキスト形式のメタデータを直接確認したい場合は、Raw Parameters に貼り付けてください。入力内容は自動的に解析されます。
 
-### 入力データ（メタデータ例）:
+## 動作例
+
+### 入力データ（メタデータ例）
 ```text
 masterpiece, best quality, absurdres, highres,
 ...
@@ -50,7 +40,7 @@ Negative prompt: worst quality, ...
 Steps: 15, Sampler: Res Multistep, CFG scale: 4, Seed: 2337776575, Size: 896x1152, Model: anima_baseV10, Template: "masterpiece, best quality,\n__構図/画面構図__: { 1 | 1.5 | 2 | 2.5 | 3} ,\n\n1girl,\n<lora:chikarin:1> ,\n__服装/おしゃれ着__ ,\n", Negative Template: "worst quality, low quality,\nbad anatomy,"
 ```
 
-### 抽出後のプロンプト (Template):
+### 抽出後のプロンプト（Template）
 ```text
 masterpiece, best quality,
 __構図/画面構図__: { 1 | 1.5 | 2 | 2.5 | 3} ,
@@ -60,33 +50,38 @@ __構図/画面構図__: { 1 | 1.5 | 2 | 2.5 | 3} ,
 __服装/おしゃれ着__ ,
 ```
 
-### 抽出後のネガティブプロンプト (Negative Template):
+### 抽出後のネガティブプロンプト（Negative Template）
 ```text
 worst quality, low quality,
 bad anatomy,
 ```
 
----
+## ローカルでの利用
 
-## 🛠 技術スタック
-- **HTML5 / CSS3 / JavaScript (ES2022 Vanilla JS)**
-- **Tailwind CSS (CDN)**
-- **Google Fonts (Inter / JetBrains Mono)**
+ビルドツールやサーバーは必要ありません。リポジトリを取得し、`index.html` をブラウザで開くだけで利用できます。
 
----
+## 技術構成
 
-## 📂 ファイル構成
+- HTML5 / CSS3 / JavaScript（ES2022、Vanilla JS）
+- Tailwind CSS（CDN）
+- Google Fonts（Inter / JetBrains Mono）
+
+## ファイル構成
 
 ```text
 sd-forge-neo_png-info-viewer/
-├── index.html              # メイン画面マークアップ
+├── index.html              # メイン画面
 ├── README.md               # ドキュメント
 ├── css/
-│   └── style.css           # カスタムスクロールバー、アニメーション、ドラッグスタイル
+│   └── style.css           # スタイル、スクロールバー、アニメーション
 ├── js/
-│   ├── constants.js        # サンプルメタデータ等の定数
-│   ├── parser.js           # 画像バイナリ解析（PNG/JPG/WebP）およびメタデータ抽出ロジック
-│   └── app.js              # DOM操作、UIイベントハンドラ、クリップボード連携
-└── TestFile_sample/        # テスト用画像・テキストファイル
+│   ├── constants.js        # サンプルメタデータ
+│   ├── parser.js           # 画像解析とメタデータ抽出
+│   └── app.js              # UI操作とファイル処理
+└── TestFile_sample/        # サンプル画像・テキスト
 ```
+
+## リポジトリ
+
+<https://github.com/keiarues/sd-forge-neo_png-info-viewer>
 
