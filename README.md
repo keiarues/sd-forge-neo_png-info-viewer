@@ -3,6 +3,8 @@
 Stable Diffusion Forge Neo で生成した画像から、埋め込まれたメタデータを読み込み、プロンプトや生成パラメータを確認するためのツールです。
 
 Forge Neo の画像メタデータには、ワイルドカードが置換されたプロンプトに加えて、置換前のテンプレートが保存されている場合があります。本ツールは後半に記録された `Template` と `Negative Template` を抽出し、エスケープされた改行などを復元して表示します。
+![alt text](docs/images/screenshot-sample01.jpg)
+
 
 ## 公開ページ
 
