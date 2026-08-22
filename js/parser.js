@@ -183,7 +183,9 @@ function parseTiffExif(uint8, tiffStart) {
                 decoded = new TextDecoder('utf-8', { fatal: true }).decode(dataSub);
               } catch (e) {
                 try {
-                  decoded = new TextDecoder('utf-16').decode(dataSub);
+                  const hasUtf16BePattern = dataSub.length >= 2 && dataSub[0] === 0x00 && dataSub[1] !== 0x00;
+                  const decoder = new TextDecoder(hasUtf16BePattern ? 'utf-16be' : 'utf-16');
+                  decoded = decoder.decode(dataSub);
                 } catch (e2) {
                   decoded = decodeUtf8OrLatin(dataSub);
                 }
