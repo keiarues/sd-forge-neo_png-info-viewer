@@ -62,6 +62,16 @@ function getStats(text) {
 }
 
 /**
+ * 出力テキストボックスを内容全体が表示される高さに調整
+ */
+function resizeOutputTextareas() {
+  for (const textarea of [outputPrompt, outputNegative]) {
+    textarea.style.height = 'auto';
+    textarea.style.height = `${textarea.scrollHeight}px`;
+  }
+}
+
+/**
  * HTMLエスケープ処理
  * @param {string} str 
  * @returns {string}
@@ -168,6 +178,7 @@ function processInput() {
   if (result.isEmpty) {
     outputPrompt.value = '';
     outputNegative.value = '';
+    resizeOutputTextareas();
     btnCopyPrompt.disabled = true;
     btnCopyNegative.disabled = true;
 
@@ -213,6 +224,8 @@ function processInput() {
     negativeBadge.className = 'text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 font-mono';
     negativeStats.textContent = '0 行 / 0 文字';
   }
+
+  resizeOutputTextareas();
 
   statusBar.classList.remove('hidden');
   statusMetaTags.innerHTML = '';
