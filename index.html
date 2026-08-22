@@ -296,22 +296,10 @@
 
         <!-- Extra Parameters / LoRA Info Accordion -->
         <div id="extra-params-container" class="bg-slate-900/60 border border-slate-800/80 rounded-xl overflow-hidden transition-all hidden">
-          <button
-            id="btn-toggle-extra"
-            type="button"
-            class="w-full px-4 py-3 text-left flex items-center justify-between text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800/50 transition-colors"
-          >
-            <span class="flex items-center gap-2">
-              <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              その他の生成パラメータ詳細 (<span id="extra-params-count">0</span> 件検出)
-            </span>
-            <svg id="arrow-extra" class="w-4 h-4 text-slate-400 transform transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-          <div id="extra-params-content" class="px-4 pb-3 pt-1 border-t border-slate-800/60">
+          <div class="px-4 py-3 text-xs font-medium text-slate-300 border-b border-slate-800/60">
+            その他の生成パラメータ詳細 (<span id="extra-params-count">0</span> 件検出)
+          </div>
+          <div id="extra-params-content" class="px-4 pb-3 pt-3">
             <div id="extra-params-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 text-xs"></div>
           </div>
         </div>

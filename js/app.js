@@ -26,11 +26,8 @@ const statusIcon = document.getElementById('status-icon');
 const statusText = document.getElementById('status-text');
 const statusMetaTags = document.getElementById('status-meta-tags');
 const extraParamsContainer = document.getElementById('extra-params-container');
-const btnToggleExtra = document.getElementById('btn-toggle-extra');
-const extraParamsContent = document.getElementById('extra-params-content');
 const extraParamsCount = document.getElementById('extra-params-count');
 const extraParamsGrid = document.getElementById('extra-params-grid');
-const arrowExtra = document.getElementById('arrow-extra');
 
 // Drag & Drop / File Elements
 const dropZone = document.getElementById('drop-zone');
@@ -67,7 +64,9 @@ function getStats(text) {
 function resizeOutputTextareas() {
   for (const textarea of [outputPrompt, outputNegative]) {
     textarea.style.height = 'auto';
-    textarea.style.height = `${textarea.scrollHeight}px`;
+    const computedStyle = window.getComputedStyle(textarea);
+    const lineHeight = parseFloat(computedStyle.lineHeight) || parseFloat(computedStyle.fontSize) * 1.5;
+    textarea.style.height = `${textarea.scrollHeight + lineHeight * 3}px`;
   }
 }
 
@@ -486,17 +485,6 @@ dropZone.addEventListener('dragleave', () => {
 });
 dropZone.addEventListener('drop', (e) => {
   dropZone.classList.remove('drag-active');
-});
-
-btnToggleExtra.addEventListener('click', () => {
-  const isHidden = extraParamsContent.classList.contains('hidden');
-  if (isHidden) {
-    extraParamsContent.classList.remove('hidden');
-    arrowExtra.classList.add('rotate-180');
-  } else {
-    extraParamsContent.classList.add('hidden');
-    arrowExtra.classList.remove('rotate-180');
-  }
 });
 
 window.addEventListener('DOMContentLoaded', () => {
