@@ -72,6 +72,32 @@ function resizeOutputTextareas() {
 }
 
 /**
+ * 手動リサイズされた textarea に合わせて親カードの幅を調整
+ */
+function syncTextareaFrame(textarea) {
+  const frame = textarea.closest('.resizable-frame');
+  if (!frame || textarea.offsetWidth === 0) return;
+
+  const frameExtraWidth = frame.offsetWidth - textarea.offsetWidth;
+  frame.style.width = `${textarea.offsetWidth + frameExtraWidth}px`;
+  frame.style.flex = '0 0 auto';
+}
+
+function observeTextareaFrames() {
+  if (typeof ResizeObserver === 'undefined') return;
+
+  const observer = new ResizeObserver(entries => {
+    for (const entry of entries) {
+      syncTextareaFrame(entry.target);
+    }
+  });
+
+  for (const textarea of [rawInput, outputPrompt, outputNegative]) {
+    observer.observe(textarea);
+  }
+}
+
+/**
  * HTMLエスケープ処理
  * @param {string} str 
  * @returns {string}
@@ -474,5 +500,6 @@ btnToggleExtra.addEventListener('click', () => {
 });
 
 window.addEventListener('DOMContentLoaded', () => {
+  observeTextareaFrames();
   rawInput.focus();
 });
