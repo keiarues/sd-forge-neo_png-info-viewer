@@ -14,7 +14,7 @@ const negativeBadge = document.getElementById('negative-badge');
 const btnCopyPrompt = document.getElementById('btn-copy-prompt');
 const btnCopyNegative = document.getElementById('btn-copy-negative');
 const btnManualParse = document.getElementById('btn-manual-parse');
-const btnSample = document.getElementById('btn-sample');
+const btnSampleImage = document.getElementById('btn-sample-image');
 const btnPaste = document.getElementById('btn-paste');
 const btnClear = document.getElementById('btn-clear');
 const inputStats = document.getElementById('input-stats');
@@ -377,11 +377,18 @@ btnManualParse.addEventListener('click', () => {
 btnCopyPrompt.addEventListener('click', () => copyToClipboard(outputPrompt.value, btnCopyPrompt, 'コピー'));
 btnCopyNegative.addEventListener('click', () => copyToClipboard(outputNegative.value, btnCopyNegative, 'コピー'));
 
-btnSample.addEventListener('click', () => {
-  removeImagePreview();
-  rawInput.value = SAMPLE_METADATA;
-  processInput();
-  showToast('テスト用サンプルデータを読み込みました', 'info');
+btnSampleImage.addEventListener('click', async () => {
+  try {
+    const response = await fetch('TestFile_sample/sample01.png');
+    if (!response.ok) throw new Error(`Sample image request failed: ${response.status}`);
+
+    const blob = await response.blob();
+    const file = new File([blob], 'sample01.png', { type: blob.type || 'image/png' });
+    await handleFile(file);
+  } catch (err) {
+    console.error('Sample image load error: ', err);
+    showToast('サンプル画像を読み込めませんでした', 'info');
+  }
 });
 
 btnClear.addEventListener('click', () => {
@@ -450,7 +457,7 @@ let dragCounter = 0;
 window.addEventListener('dragenter', (e) => {
   e.preventDefault();
   dragCounter++;
-  dropOverlay.classList.remove('opacity-0', 'pointer-events-none');
+  dropOverlay.classList.remove('opacity-0');
 });
 
 window.addEventListener('dragleave', (e) => {
@@ -458,7 +465,7 @@ window.addEventListener('dragleave', (e) => {
   dragCounter--;
   if (dragCounter <= 0) {
     dragCounter = 0;
-    dropOverlay.classList.add('opacity-0', 'pointer-events-none');
+    dropOverlay.classList.add('opacity-0');
   }
 });
 
@@ -469,7 +476,7 @@ window.addEventListener('dragover', (e) => {
 window.addEventListener('drop', async (e) => {
   e.preventDefault();
   dragCounter = 0;
-  dropOverlay.classList.add('opacity-0', 'pointer-events-none');
+  dropOverlay.classList.add('opacity-0');
 
   if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
     await handleFile(e.dataTransfer.files[0]);

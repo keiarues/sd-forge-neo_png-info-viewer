@@ -87,6 +87,6 @@ sd-forge-neo_png-info-viewer/
 │   ├── constants.js        # サンプルメタデータ等の定数
 │   ├── parser.js           # 画像バイナリ解析（PNG/JPG/WebP）およびメタデータ抽出ロジック
 │   └── app.js              # DOM操作、UIイベントハンドラ、クリップボード連携
-└── sample_TestFile/        # テスト用画像・テキストファイル
+└── TestFile_sample/        # テスト用画像・テキストファイル
 ```
 
