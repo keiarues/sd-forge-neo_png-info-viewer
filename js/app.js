@@ -369,6 +369,17 @@ rawInput.addEventListener('input', () => {
   processInput();
 });
 
+for (const [textarea, statsElement] of [
+  [outputPrompt, promptStats],
+  [outputNegative, negativeStats],
+]) {
+  textarea.addEventListener('input', () => {
+    const stats = getStats(textarea.value);
+    statsElement.textContent = `${stats.lines} 行 / ${stats.chars} 文字`;
+    resizeOutputTextareas();
+  });
+}
+
 btnManualParse.addEventListener('click', () => {
   processInput();
   showToast('解析・整形を更新しました', 'info');
