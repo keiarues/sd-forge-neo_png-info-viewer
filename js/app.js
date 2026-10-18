@@ -7,6 +7,7 @@
 // DOM Elements
 // ==========================================
 const rawInput = document.getElementById('raw-input');
+const rawParametersDetails = document.getElementById('raw-parameters-details');
 const outputPrompt = document.getElementById('output-prompt');
 const outputNegative = document.getElementById('output-negative');
 const promptBadge = document.getElementById('prompt-badge');
@@ -25,7 +26,6 @@ const statusBox = document.getElementById('status-box');
 const statusIcon = document.getElementById('status-icon');
 const statusText = document.getElementById('status-text');
 const statusMetaTags = document.getElementById('status-meta-tags');
-const extraParamsContainer = document.getElementById('extra-params-container');
 const extraParamsCount = document.getElementById('extra-params-count');
 const extraParamsGrid = document.getElementById('extra-params-grid');
 
@@ -216,7 +216,8 @@ function processInput() {
     negativeStats.textContent = '0 行 / 0 文字';
 
     statusBar.classList.add('hidden');
-    extraParamsContainer.classList.add('hidden');
+    extraParamsCount.textContent = '0';
+    extraParamsGrid.innerHTML = '<p class="text-xs text-slate-500 sm:col-span-2 lg:col-span-3">画像またはメタデータを読み込むと、生成パラメータがここに表示されます。</p>';
     return;
   }
 
@@ -279,11 +280,10 @@ function processInput() {
   }
 
   const paramKeys = Object.keys(result.extraParams);
-  if (paramKeys.length > 0) {
-    extraParamsContainer.classList.remove('hidden');
-    extraParamsCount.textContent = paramKeys.length;
-    extraParamsGrid.innerHTML = '';
+  extraParamsCount.textContent = paramKeys.length;
+  extraParamsGrid.innerHTML = '';
 
+  if (paramKeys.length > 0) {
     for (const [k, v] of Object.entries(result.extraParams)) {
       const item = document.createElement('div');
       item.className = 'bg-slate-950/60 p-2 rounded-lg border border-slate-800/60 flex flex-col gap-0.5 overflow-hidden';
@@ -294,7 +294,7 @@ function processInput() {
       extraParamsGrid.appendChild(item);
     }
   } else {
-    extraParamsContainer.classList.add('hidden');
+    extraParamsGrid.innerHTML = '<p class="text-xs text-slate-500 sm:col-span-2 lg:col-span-3">生成パラメータは見つかりませんでした。</p>';
   }
 }
 
@@ -314,6 +314,7 @@ async function handleFile(file) {
   if (isImage) {
     const reader = new FileReader();
     reader.onload = (e) => {
+      rawParametersDetails.open = false;
       imagePreview.src = e.target.result;
       previewFilename.textContent = file.name;
       previewFilesize.textContent = formatBytes(file.size);
@@ -339,6 +340,7 @@ async function handleFile(file) {
       showToast('画像メタデータの解析に失敗しました', 'info');
     }
   } else {
+    rawParametersDetails.open = true;
     try {
       const text = await file.text();
       rawInput.value = text;
@@ -359,6 +361,7 @@ function removeImagePreview() {
   imagePreviewContainer.classList.add('hidden');
   dropPrompt.classList.remove('hidden');
   fileInput.value = '';
+  rawParametersDetails.open = true;
 }
 
 // ==========================================

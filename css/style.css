@@ -1,4 +1,16 @@
 /* Custom scrollbars */
+summary::-webkit-details-marker {
+  display: none;
+}
+
+#raw-parameters-details .details-chevron {
+  transform: rotate(-90deg);
+}
+
+#raw-parameters-details[open] .details-chevron {
+  transform: rotate(0deg);
+}
+
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
